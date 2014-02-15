@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 
-from .t6price import t6price
+from t6price import t6price
 
 def create_app():
     app = Flask(__name__)
