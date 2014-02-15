@@ -1,0 +1,36 @@
+{% extends "index.html" %}
+
+{% macro item_details(data) -%}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">{{ data.name }}</h3>
+    </div>
+    <div class="panel-body">
+      <div class="row">
+	<img class="center-block" src="{{ data.img }}" />
+	<dl class="dl-horizontal">
+	  <dt># Sale Offers</dt>
+	  <dd>{{ data.sale_availability }}</dd>
+	  <dt>Min Sale Offer</dt>
+	  <dd>{{ pretty_money(data.min_sale_unit_price) }}</dd>
+	  <dt># Buy Offers</dt>
+	  <dd>{{ data.offer_availability }}</dd>
+	  <dt>Max Buy Offer</dt>
+	  <dd>{{ pretty_money(data.max_offer_unit_price) }}</dd>
+	</dl>
+      </div>
+    </div>
+  </div>
+{%- endmacro %}
+
+{% block content -%}
+  <div class="container">
+    <div class="row">
+      {% for item in items -%}
+	<div class="col-md-3 col-sm-6 col-xs-6">
+	  {{ item_details(item) }}
+	</div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
