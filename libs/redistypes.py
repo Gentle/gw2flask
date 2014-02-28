@@ -1,8 +1,10 @@
 from contextlib import contextmanager
 from collections import MutableMapping
+import re
 
 import json
 
+import sys
 connection = None
 
 
@@ -115,7 +117,8 @@ class RedisHashSet(RedisObject, MutableMapping):
             return default
 
     def __setitem__(self, key, data):
-        self.connection.hmset(self._join(self.basekey, key), data)
+        itemkey = self._join(self.basekey, key)
+        self._save_dict(itemkey, data)
         self.connection.sadd(self.idkey, key)
 
     def __delitem__(self, key):
@@ -179,7 +182,7 @@ class RedisHash(RedisObject):
 
     def __getitem__(self, key):
         result = self.connection.hget(self.key, key)
-        if result:
+        if result is not None:
             if self.connection.sismember(self.jsonkey, key):
                 result = json.loads(result)
             return result
@@ -206,3 +209,37 @@ class RedisHash(RedisObject):
     def delete(self):
         self.connection.delete(self.key)
         self.connection.delete(self.jsonkey)
+
+
+def progress(now, final):
+    numlen = len(str(final))
+    current = str(now).rjust(numlen)
+    sys.stdout.write('%s/%s' % (current, final))
+    sys.stdout.flush()
+    if now == final:
+        sys.stdout.write('\n')
+    else:
+        sys.stdout.write('\b' * (numlen * 2 + 1))
+
+
+def migrate(key):
+    h = RedisHashSet(key)
+    ure = re.compile(r"u'.*'")
+    sys.stdout.write("migrating %s\n" % (h.basekey))
+    sys.stdout.flush()
+    size = len(h)
+    for (i, itemkey) in enumerate(h, start=1):
+        progress(i, size)
+        item = h[itemkey]
+        for key in item:
+            value = item[key]
+            if not isinstance(value, basestring):
+                continue
+            match = ure.search(value)
+            if match:
+                try:
+                    data = eval(value)
+                    if isinstance(data, list) or isinstance(data, dict):
+                        item[key] = data
+                except:
+                    pass
