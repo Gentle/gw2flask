@@ -23,6 +23,7 @@ def pretty_money(value):
 
 @t6price.route('/')
 def view():
+    # in the order we want them to be rendered
     ids = [24358,
            24289,
            24300,
